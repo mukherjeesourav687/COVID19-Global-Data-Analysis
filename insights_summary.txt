@@ -1,0 +1,65 @@
+COVID-19 Case Study — Insights Summary
+
+Overview
+- Source workbook: covid_19_dataset.xlsx (sheets: confirmed, deaths, recovered).
+- Cleaned and merged dataset saved as: merged_clean.csv (36,556 rows).
+
+Data cleaning & transformations
+- Converted wide-format time columns to long format (`confirmed_long`, `deaths_long`, `recovered_long`).
+- Normalized date parsing using explicit formats: parsed source date strings with '%m/%d/%y' and normalized merged dates to '%Y-%m-%d'.
+- Dropped invalid Date rows (none remained after parsing in current run).
+- Forward-filled missing province/state values and forward-filled cumulative series where appropriate.
+- Calculated daily values by differencing cumulative counts across date columns.
+
+Merging & aggregations
+- Merged confirmed, deaths (cumulative), and recovered long tables on `Province/State`, `Country/Region`, and `Date`.
+- Created `Month` period column and computed monthly aggregates per country for Confirmed, Cumulative_Deaths, and Recovered.
+
+Rate calculations & safety
+- Computed `Death_Rate = Cumulative_Deaths / Confirmed` using safe division: replaced zeros in `Confirmed` with NaN to avoid divide-by-zero, and removed infinite results.
+- Ensured no chained-assignment warnings by avoiding inplace replacements on copies.
+
+Key quantitative findings
+- Data shape (after initial load): Confirmed (276 x 498), Deaths (276 x 498), Recovered (261 x 498). (Rows represent region entries; columns represent date columns + metadata.)
+- Merged cleaned dataset rows: 36,556.
+- Top single-day country surges (per-country maxima):
+  - Turkey: 823,225 (max single-day total across date columns)
+  - India: 414,188
+  - US: 300,310
+  - France: 117,900
+  - Brazil: 100,158
+- Top 10 single-day events across all countries (examples): Turkey 2020-10-12 (823,225); India 2021-06-05 (414,188); several large India events in 2021.
+- Top average death-rate (country-level mean for 2020): United Kingdom, Denmark, Netherlands (after handling zeros). Note: high numbers can indicate few confirmed cases with non-zero deaths in the aggregated view or data quirks; interpret with care.
+
+Plots
+- Top countries confirmed-case trend plotted using datetime x-axis and monthly tick locators for readability.
+- China confirmed-case time series plotted with formatted monthly ticks.
+- X-axis labels were dense for daily plots; applied monthly locators (spacing interval adjustable).
+
+Warnings / caveats
+- Date parsing required explicit formats; `errors='coerce'` was used where necessary. If source date formats vary, some entries could become NaT — current run showed 0 invalid rows in `merged`.
+- PerformanceWarning observed when assigning many new columns to `daily` (fragmented frame). This is not critical for analysis but could be optimized by reshaping rather than repeated column operations.
+- Some computed rates may still need domain-level cleaning (e.g., remove rows where Confirmed is extremely low or where reporting anomalies exist).
+
+Recommendations / next steps
+1. Visual improvements: reduce tick density further (quarterly), add figure export, and annotate key peaks on plots.
+2. Data validation: run diff-checks to locate rows where cumulative totals decrease (reporting inconsistencies) or where recovered > confirmed.
+3. Robustness: consider smoothing daily series (7-day rolling average) before comparing surges.
+4. Analysis extensions:
+   - Identify top N peak-days per country and produce a short narrative of drivers (dates, events).
+   - Compute per-capita rates using population data for fairer cross-country comparisons.
+   - Produce a short written summary interpreting top death-rate and recovery-rate findings with contextual caveats.
+
+Files produced
+- COVID19_Case_Study_Complete.ipynb (updated)
+- merged_clean.csv (saved in notebook directory)
+- insights_summary.txt (this file)
+
+If you want, I can now:
+- Generate a PDF/markdown report with figures.
+- Produce cleaned tables showing rows that were coerced to NaT (if any).
+- Implement per-capita normalization if you provide a population file.
+
+
+Prepared on: 2026-06-01
+Prepared by: Notebook assistant (applied automated fixes and verifications)
